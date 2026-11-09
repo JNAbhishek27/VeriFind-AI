@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from backend.ai_models import QueryUnderstanding, StructuredAnswer
 from backend.extractor import ExtractedContent
+from backend.provider_models import ProviderHealthStatus, InferenceBenchmarkResult
 
 
 class BaseAIEngine(ABC):
@@ -42,5 +43,15 @@ class BaseAIEngine(ABC):
         Returns:
             StructuredAnswer object with verbatim citations, extracted fields, and missing info flags.
         """
+        pass
+
+    @abstractmethod
+    async def health_check(self) -> ProviderHealthStatus:
+        """Performs a provider connectivity and readiness check."""
+        pass
+
+    @abstractmethod
+    async def benchmark(self, prompt: str = "Test prompt for benchmark") -> InferenceBenchmarkResult:
+        """Runs a benchmark measuring latency, token throughput, and device resources."""
         pass
 

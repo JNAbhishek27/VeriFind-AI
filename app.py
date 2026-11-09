@@ -91,6 +91,12 @@ st.divider()
 # Sidebar Configuration
 with st.sidebar:
     st.header("⚙️ Agent Controls")
+    model_provider_choice = st.selectbox(
+        "AI Model Provider:",
+        options=["gemini", "amd_rocm", "openai_compatible"],
+        index=0,
+        help="Select between Google Gemini and AMD Developer Cloud ROCm inference backend."
+    )
     max_search_results = st.slider("Max Search Results", min_value=1, max_value=8, value=4, step=1)
     timeout_sec = st.slider("Navigation Timeout (sec)", min_value=5, max_value=30, value=15, step=5)
     headless_mode = st.checkbox("Headless Browser Mode", value=True)
@@ -98,10 +104,11 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 🏆 Match 4 Architecture")
     st.markdown("""
+    - **Inference Hardware:** AMD Instinct MI300X / ROCm 6.x
+    - **Open-Source Model:** Qwen2.5-7B-Instruct
+    - **Dev Provider:** Gemini 3.8 Flash
     - **Browser Automation:** Playwright (Chromium)
     - **Extraction:** Trafilatura & BeautifulSoup4
-    - **Verification:** Multi-source citation matcher
-    - **Inference Ready:** AMD ROCm / Gemini API
     """)
 
 # User Input Form
@@ -134,7 +141,8 @@ if submit_button:
         engine = AnswerEngine(
             max_search_results=max_search_results,
             headless=headless_mode,
-            timeout_ms=timeout_sec * 1000
+            timeout_ms=timeout_sec * 1000,
+            model_provider=model_provider_choice
         )
 
         try:

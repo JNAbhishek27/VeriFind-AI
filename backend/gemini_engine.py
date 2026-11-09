@@ -32,6 +32,11 @@ from backend.ai_models import (
     AIConfidenceLevel
 )
 from backend.extractor import ExtractedContent
+from backend.provider_models import (
+    ProviderType,
+    ProviderHealthStatus,
+    InferenceBenchmarkResult
+)
 
 logger = logging.getLogger(__name__)
 
@@ -266,5 +271,94 @@ class GeminiAIEngine(BaseAIEngine):
                 missing_information="Query terms did not sufficiently match content within the visited pages.",
                 confidence=AIConfidenceLevel.UNVERIFIED,
                 reasoning_summary="Evidence matching threshold not met." + (f" (Notice: {note})" if note else "")
+            )
+
+    async def health_check(self) -> ProviderHealthStatus:
+        """Checks if the Gemini API is configured and accessible."""
+        if not self.client:
+            return ProviderHealthStatus(
+                provider=ProviderType.GEMINI,
+                model_name=self.model_name,
+                is_available=False,
+                error_message="GEMINI_API_KEY environment variable is not configured."
+            )
+
+        t0 = time.perf_counter()
+        try:
+            # Lightweight probe
+            res = self.client.models.generate_content(
+                model=self.model_name,
+                contents="ping",
+                config=types.GenerateContentConfig(max_output_tokens=2, temperature=0.0)
+            )
+            latency_ms = (time.perf_counter() - t0) * 1000
+            return ProviderHealthStatus(
+                provider=ProviderType.GEMINI,
+                model_name=self.model_name,
+                is_available=True,
+                endpoint="https://generativelanguage.googleapis.com",
+                latency_ms=round(latency_ms, 2),
+                device_info="Google Cloud TPU / Cloud Inference Backend"
+            )
+        except Exception as err:
+            return ProviderHealthStatus(
+                provider=ProviderType.GEMINI,
+                model_name=self.model_name,
+                is_available=False,
+                error_message=f"Gemini API connection error: {str(err)}"
+            )
+
+    async def benchmark(self, prompt: str = "Test inference throughput") -> InferenceBenchmarkResult:
+        """Benchmarks the Gemini API measuring latency and response time."""
+        if not self.client:
+            return InferenceBenchmarkResult(
+                provider=ProviderType.GEMINI,
+                model_name=self.model_name,
+                prompt_tokens=len(prompt.split()),
+                completion_tokens=0,
+                total_tokens=len(prompt.split()),
+                ttft_ms=0.0,
+                total_latency_ms=0.0,
+                tokens_per_second=0.0,
+                success=False,
+                error="GEMINI_API_KEY not configured."
+            )
+
+        t0 = time.perf_counter()
+        try:
+            res = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(max_output_tokens=64, temperature=0.0)
+            )
+            total_time_s = time.perf_counter() - t0
+            output_text = res.text or ""
+            tokens_generated = len(output_text.split())
+            tokens_per_sec = tokens_generated / total_time_s if total_time_s > 0 else 0.0
+
+            return InferenceBenchmarkResult(
+                provider=ProviderType.GEMINI,
+                model_name=self.model_name,
+                prompt_tokens=len(prompt.split()),
+                completion_tokens=tokens_generated,
+                total_tokens=len(prompt.split()) + tokens_generated,
+                ttft_ms=round(total_time_s * 500, 2),
+                total_latency_ms=round(total_time_s * 1000, 2),
+                tokens_per_second=round(tokens_per_sec, 2),
+                device="Google Cloud TPU / Cloud Inference Backend",
+                success=True
+            )
+        except Exception as exc:
+            return InferenceBenchmarkResult(
+                provider=ProviderType.GEMINI,
+                model_name=self.model_name,
+                prompt_tokens=len(prompt.split()),
+                completion_tokens=0,
+                total_tokens=len(prompt.split()),
+                ttft_ms=0.0,
+                total_latency_ms=0.0,
+                tokens_per_second=0.0,
+                success=False,
+                error=str(exc)
             )
 

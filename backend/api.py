@@ -4,6 +4,7 @@ Provides API endpoints for programmatic information retrieval, headless testing,
 and integration with external workflows or AMD ROCm pipelines.
 """
 
+import os
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,8 @@ from pydantic import BaseModel, Field
 from backend.answer_engine import AnswerEngine
 from backend import RetrievalResult, VerificationStatus
 from backend.browser import validate_and_normalize_url
+from backend.model_factory import ModelProviderFactory
+from backend.provider_models import ProviderHealthStatus, InferenceBenchmarkResult
 
 app = FastAPI(
     title="VeriFind AI - Intelligent Web Information Retrieval API",
@@ -34,6 +37,7 @@ class QueryRequest(BaseModel):
     query: str = Field(..., min_length=3, description="Natural language question or target query.")
     starting_url: Optional[str] = Field(default=None, description="Optional seed URL or specific domain to restrict exploration.")
     max_search_results: int = Field(default=4, ge=1, le=10, description="Maximum search results / seeds to consider.")
+    model_provider: Optional[str] = Field(default=None, description="Optional provider override: 'gemini', 'amd_rocm', 'openai_compatible'.")
     headless: bool = Field(default=True, description="Run browser in headless mode.")
     timeout_ms: int = Field(default=15000, ge=3000, le=45000, description="Per-page navigation timeout in milliseconds.")
 
@@ -75,13 +79,72 @@ class QueryResponse(BaseModel):
 
 @app.get("/health", tags=["System"])
 async def health_check():
-    """Returns system status and engine readiness."""
+    """Returns system status and active AI model provider health."""
+    active_provider = ModelProviderFactory.get_provider()
+    provider_health = await active_provider.health_check()
     return {
         "status": "healthy",
         "service": "verifind-ai",
         "version": "0.3.0",
         "browser_engine": "Playwright Chromium + HTTPX fallback",
-        "ai_engine": "Google GenAI (gemini-3.8-flash) / Local ROCm compatible"
+        "configured_provider": os.getenv("MODEL_PROVIDER", "gemini"),
+        "provider_health": {
+            "provider": provider_health.provider.value,
+            "model_name": provider_health.model_name,
+            "is_available": provider_health.is_available,
+            "endpoint": provider_health.endpoint,
+            "latency_ms": provider_health.latency_ms,
+            "device_info": provider_health.device_info,
+            "error_message": provider_health.error_message
+        }
+    }
+
+
+@app.get("/api/v1/providers/health", tags=["AI Providers"])
+async def check_all_providers():
+    """Checks availability across all configured model providers (Gemini, AMD ROCm)."""
+    gemini_prov = ModelProviderFactory.get_provider("gemini")
+    rocm_prov = ModelProviderFactory.get_provider("amd_rocm")
+
+    gemini_health = await gemini_prov.health_check()
+    rocm_health = await rocm_prov.health_check()
+
+    return {
+        "gemini": {
+            "model": gemini_health.model_name,
+            "available": gemini_health.is_available,
+            "latency_ms": gemini_health.latency_ms,
+            "device": gemini_health.device_info,
+            "error": gemini_health.error_message
+        },
+        "amd_rocm": {
+            "model": rocm_health.model_name,
+            "endpoint": rocm_health.endpoint,
+            "available": rocm_health.is_available,
+            "latency_ms": rocm_health.latency_ms,
+            "device": rocm_health.device_info,
+            "error": rocm_health.error_message
+        }
+    }
+
+
+@app.post("/api/v1/providers/benchmark", tags=["AI Providers"])
+async def benchmark_provider(provider: str = Query("amd_rocm", description="Provider to benchmark: 'amd_rocm' or 'gemini'")):
+    """Benchmarks inference throughput, latency, and tokens/sec for the requested provider."""
+    ai_engine = ModelProviderFactory.get_provider(provider)
+    result = await ai_engine.benchmark()
+    return {
+        "provider": result.provider.value,
+        "model_name": result.model_name,
+        "prompt_tokens": result.prompt_tokens,
+        "completion_tokens": result.completion_tokens,
+        "total_tokens": result.total_tokens,
+        "ttft_ms": result.ttft_ms,
+        "total_latency_ms": result.total_latency_ms,
+        "tokens_per_second": result.tokens_per_second,
+        "device": result.device,
+        "success": result.success,
+        "error": result.error
     }
 
 
@@ -100,7 +163,8 @@ async def retrieve_information(request: QueryRequest):
     engine = AnswerEngine(
         max_search_results=request.max_search_results,
         headless=request.headless,
-        timeout_ms=request.timeout_ms
+        timeout_ms=request.timeout_ms,
+        model_provider=request.model_provider
     )
 
     try:

@@ -24,7 +24,8 @@ from backend.extractor import ContentExtractor, ExtractedContent
 from backend.ranker import PassageRanker
 from backend.verifier import EvidenceVerificationEngine, VerificationReport
 from backend.navigation_engine import WebsiteNavigationEngine
-from backend.gemini_engine import GeminiAIEngine
+from backend.model_factory import ModelProviderFactory
+from backend.ai_engine_base import BaseAIEngine
 
 
 class AnswerEngine:
@@ -34,7 +35,9 @@ class AnswerEngine:
         self,
         max_search_results: int = 4,
         headless: bool = True,
-        timeout_ms: int = 15000
+        timeout_ms: int = 15000,
+        ai_engine: Optional[BaseAIEngine] = None,
+        model_provider: Optional[str] = None
     ):
         self.parser = QueryParser()
         self.search_engine = WebSearchEngine(max_results=max_search_results)
@@ -42,7 +45,7 @@ class AnswerEngine:
         self.extractor = ContentExtractor()
         self.ranker = PassageRanker()
         self.verifier = EvidenceVerificationEngine()
-        self.ai_engine = GeminiAIEngine()
+        self.ai_engine = ai_engine or ModelProviderFactory.get_provider(provider_name=model_provider)
         self.nav_engine = WebsiteNavigationEngine(
             max_depth=2,
             max_pages=8,
