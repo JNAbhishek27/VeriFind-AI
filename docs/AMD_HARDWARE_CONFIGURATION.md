@@ -262,3 +262,4 @@ export LOG_LEVEL=DEBUG
 
 *Last updated: 2026-11-09 | Development environment: MacBook Air M2, macOS, Python 3.14.6*  
 *ROCm actual execution status: **NOT YET TESTED** — target hardware required.*
+

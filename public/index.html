@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeriFind AI — Intelligent Web Information Retrieval</title>
+  <style>
+    :root {
+      --amd-red: #E6253A;
+      --amd-dark: #1a1a2e;
+      --amd-card: #16213e;
+      --amd-border: #0f3460;
+      --amd-accent: #e94560;
+      --text: #e0e0e0;
+      --text-muted: #9e9e9e;
+      --success: #4caf50;
+      --warning: #ff9800;
+      --error: #f44336;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--amd-dark);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+      border-bottom: 2px solid var(--amd-red);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo-badge {
+      background: var(--amd-red);
+      color: white;
+      font-weight: 800;
+      font-size: 1.1rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+    header h1 { font-size: 1.5rem; font-weight: 700; }
+    header span { font-size: 0.85rem; color: var(--text-muted); margin-left: auto; }
+
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+
+    .card {
+      background: var(--amd-card);
+      border: 1px solid var(--amd-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .card h2 { font-size: 1rem; color: var(--text-muted); text-transform: uppercase;
+                letter-spacing: 0.08em; margin-bottom: 1rem; }
+
+    label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    input, select, textarea {
+      width: 100%;
+      background: #0f0f23;
+      border: 1px solid var(--amd-border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 1rem;
+    }
+    input:focus, textarea:focus { border-color: var(--amd-red); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .row { display: flex; gap: 1rem; }
+    .row > * { flex: 1; }
+
+    button {
+      background: var(--amd-red);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.85rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      width: 100%;
+    }
+    button:hover { background: #c41e30; }
+    button:active { transform: scale(0.98); }
+    button:disabled { background: #555; cursor: not-allowed; }
+
+    /* Progress */
+    .progress-bar {
+      height: 4px;
+      background: var(--amd-border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--amd-red), var(--amd-accent));
+      border-radius: 4px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+    .status-msg { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+    /* Answer */
+    .answer-text {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      padding: 1rem;
+      background: #0f0f23;
+      border-radius: 8px;
+      border-left: 3px solid var(--amd-red);
+    }
+    .verification-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 0.75rem;
+    }
+    .badge-verified { background: rgba(76,175,80,0.2); color: var(--success); border: 1px solid var(--success); }
+    .badge-partial  { background: rgba(255,152,0,0.2);  color: var(--warning); border: 1px solid var(--warning); }
+    .badge-unverified { background: rgba(244,67,54,0.2); color: var(--error);   border: 1px solid var(--error); }
+
+    /* Citations */
+    .citation {
+      background: #0f0f23;
+      border: 1px solid var(--amd-border);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .citation blockquote {
+      font-style: italic;
+      color: var(--text-muted);
+      border-left: 2px solid var(--amd-red);
+      padding-left: 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+    .citation a { color: var(--amd-accent); text-decoration: none; font-size: 0.85rem; }
+    .citation a:hover { text-decoration: underline; }
+
+    /* Visited pages */
+    .page-pill {
+      display: inline-block;
+      background: var(--amd-border);
+      border-radius: 20px;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.8rem;
+      margin: 0.25rem;
+      max-width: 240px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .hidden { display: none; }
+    .error-box {
+      background: rgba(244,67,54,0.1);
+      border: 1px solid var(--error);
+      border-radius: 8px;
+      padding: 1rem;
+      color: var(--error);
+      font-size: 0.9rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    footer strong { color: var(--amd-red); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-badge">AMD</div>
+  <h1>VeriFind AI</h1>
+  <span>🏆 AMD AI League Match 4 · Intelligent Web Information Retrieval</span>
+</header>
+
+<main>
+  <!-- Query Card -->
+  <div class="card">
+    <h2>🔍 Ask a Question</h2>
+    <label for="queryInput">Natural-language question</label>
+    <textarea id="queryInput" placeholder="e.g. What is the CEO of AMD and what are their latest GPU specs?"></textarea>
+
+    <label for="urlInput">Starting URL (optional)</label>
+    <input id="urlInput" type="url" placeholder="https://example.com" />
+
+    <div class="row">
+      <div>
+        <label for="providerSelect">AI Model Provider</label>
+        <select id="providerSelect">
+          <option value="gemini">Google Gemini</option>
+          <option value="amd_rocm">AMD ROCm (Qwen)</option>
+          <option value="openai_compatible">OpenAI-Compatible</option>
+        </select>
+      </div>
+      <div>
+        <label for="maxPages">Max Pages</label>
+        <select id="maxPages">
+          <option value="4">4 pages</option>
+          <option value="6" selected>6 pages</option>
+          <option value="8">8 pages</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="searchBtn" onclick="runSearch()">🚀 Research & Verify</button>
+  </div>
+
+  <!-- Progress -->
+  <div id="progressCard" class="card hidden">
+    <h2>⚙️ Research Progress</h2>
+    <div class="status-msg" id="statusMsg">Initializing...</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <!-- Answer -->
+  <div id="answerCard" class="card hidden">
+    <h2>✅ Answer</h2>
+    <div class="answer-text" id="answerText"></div>
+    <div id="verificationBadge"></div>
+  </div>
+
+  <!-- Citations -->
+  <div id="citationsCard" class="card hidden">
+    <h2>📚 Evidence & Citations</h2>
+    <div id="citationsList"></div>
+  </div>
+
+  <!-- Visited Pages -->
+  <div id="pagesCard" class="card hidden">
+    <h2>🌐 Pages Visited</h2>
+    <div id="pagesList"></div>
+  </div>
+
+  <!-- Error -->
+  <div id="errorCard" class="card hidden">
+    <div class="error-box" id="errorMsg"></div>
+  </div>
+</main>
+
+<footer>
+  <strong>VeriFind AI</strong> · AMD AI League Match 4 · Built with FastAPI + Google Gemini + AMD ROCm
+</footer>
+
+<script>
+  // Detect backend URL: same origin in production (Vercel), localhost in dev
+  const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'
+    : '';  // same origin on Vercel
+
+  function setProgress(pct, msg) {
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('statusMsg').textContent = msg;
+  }
+
+  function show(id)   { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id)   { document.getElementById(id).classList.add('hidden'); }
+
+  async function runSearch() {
+    const query = document.getElementById('queryInput').value.trim();
+    if (!query) { alert('Please enter a question.'); return; }
+
+    const url   = document.getElementById('urlInput').value.trim() || null;
+    const provider = document.getElementById('providerSelect').value;
+    const maxPages = parseInt(document.getElementById('maxPages').value);
+
+    // Reset UI
+    ['answerCard','citationsCard','pagesCard','errorCard'].forEach(hide);
+    show('progressCard');
+    setProgress(10, 'Parsing query...');
+    document.getElementById('searchBtn').disabled = true;
+
+    try {
+      setProgress(30, 'Navigating web and extracting content...');
+
+      const resp = await fetch(`${API_BASE}/api/v1/retrieve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: query,
+          starting_url: url,
+          max_search_results: maxPages,
+          model_provider: provider
+        })
+      });
+
+      setProgress(80, 'Verifying evidence...');
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+        throw new Error(err.detail || `HTTP ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      setProgress(100, 'Complete!');
+
+      renderResult(data);
+
+    } catch (err) {
+      hide('progressCard');
+      show('errorCard');
+      document.getElementById('errorMsg').textContent = '⚠️ ' + err.message;
+    } finally {
+      document.getElementById('searchBtn').disabled = false;
+    }
+  }
+
+  function renderResult(data) {
+    hide('progressCard');
+
+    // Answer
+    const answer = data.answer || data.direct_answer || 'No answer found.';
+    document.getElementById('answerText').textContent = answer;
+
+    const vs = (data.verification_status || '').toLowerCase();
+    const badgeEl = document.getElementById('verificationBadge');
+    if (vs.includes('verified') && !vs.includes('partial')) {
+      badgeEl.innerHTML = '<span class="verification-badge badge-verified">✅ Verified</span>';
+    } else if (vs.includes('partial') || vs.includes('conflict')) {
+      badgeEl.innerHTML = '<span class="verification-badge badge-partial">⚠️ Partially Verified</span>';
+    } else {
+      badgeEl.innerHTML = '<span class="verification-badge badge-unverified">❌ Unverified</span>';
+    }
+    show('answerCard');
+
+    // Citations
+    const citations = data.evidence || data.citations || [];
+    if (citations.length > 0) {
+      const list = document.getElementById('citationsList');
+      list.innerHTML = citations.map((c, i) => `
+        <div class="citation">
+          <strong>Source ${i+1}: ${escHtml(c.source_title || c.title || 'Webpage')}</strong>
+          <blockquote>${escHtml(c.snippet || c.quote || c.excerpt || '')}</blockquote>
+          <a href="${escHtml(c.source_url || c.url || '#')}" target="_blank" rel="noopener">
+            🔗 ${escHtml(c.source_url || c.url || '')}
+          </a>
+        </div>
+      `).join('');
+      show('citationsCard');
+    }
+
+    // Visited pages (API returns visited_pages as array of objects with .url)
+    const rawPages = data.visited_pages || data.visited_urls || [];
+    const pages = rawPages.map(p => typeof p === 'string' ? p : (p.url || ''));
+    if (pages.filter(Boolean).length > 0) {
+      document.getElementById('pagesList').innerHTML =
+        pages.filter(Boolean).map(u => `<span class="page-pill" title="${escHtml(u)}">🌐 ${escHtml(u)}</span>`).join('');
+      show('pagesCard');
+    }
+
+    // Show conflicts if detected
+    if (data.conflicts_detected && data.conflicts_detected.length > 0) {
+      document.getElementById('verificationBadge').innerHTML +=
+        ' <span class="verification-badge badge-partial">⚡ Conflicts Detected</span>';
+    }
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Allow Enter in textarea with Ctrl/Cmd
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('queryInput').addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runSearch();
+    });
+  });
+</script>
+</body>
+</html>

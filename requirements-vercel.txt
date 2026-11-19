@@ -1,0 +1,13 @@
+# VeriFind AI — Vercel Production Dependencies
+# Playwright is intentionally EXCLUDED (no browser binaries in Vercel serverless).
+# Streamlit is intentionally EXCLUDED (frontend is static HTML/JS).
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.1
+httpx>=0.27.0
+beautifulsoup4>=4.12.3
+trafilatura>=1.8.0
+lxml>=5.2.0
+google-genai>=1.0.0
