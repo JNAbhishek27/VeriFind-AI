@@ -23,3 +23,4 @@ from backend.api import app  # noqa: E402  — FastAPI app
 
 # Vercel expects the ASGI app to be named `app` or exported as the module default
 # The @vercel/python runtime detects FastAPI/Starlette ASGI apps automatically.
+
