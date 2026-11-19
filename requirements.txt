@@ -1,15 +1,24 @@
-# Dependencies for VeriFind AI
-streamlit>=1.35.0
+# VeriFind AI — Production Dependencies (Vercel Serverless)
+#
+# EXCLUDED (not compatible with Vercel serverless / too large):
+#   playwright   — no browser binaries available in Lambda
+#   streamlit    — replaced by static public/index.html
+#   pytest       — dev-only, never deploy test runners
+#
+# Kept minimal to stay under Vercel's 250 MB compressed limit.
+
 fastapi>=0.110.0
-uvicorn[standard]>=0.29.0
+# Use bare uvicorn, not uvicorn[standard] — saves ~15 MB
+# (watchfiles, websockets, httptools not needed in serverless)
+uvicorn>=0.29.0
 pydantic>=2.7.0
 pydantic-settings>=2.2.0
 python-dotenv>=1.0.1
 httpx>=0.27.0
 beautifulsoup4>=4.12.3
-trafilatura>=1.8.0
+# lxml is optional but needed by bs4 for robust HTML parsing; include it
 lxml>=5.2.0
-playwright>=1.44.0
-pytest>=8.2.0
+# trafilatura for clean text extraction from web pages
+trafilatura>=1.8.0
+# Google Gemini SDK (HTTP-based, no grpcio dependency in v1+)
 google-genai>=1.0.0
-

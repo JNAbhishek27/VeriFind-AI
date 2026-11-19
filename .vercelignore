@@ -1,0 +1,47 @@
+# Files/folders excluded from the Vercel deployment bundle.
+# Reducing bundle size is critical — Vercel Lambda limit is 500 MB uncompressed.
+
+# Local dev files (never needed in production)
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Playwright browser binaries (huge — 200+ MB, not usable in serverless)
+ms-playwright/
+.playwright/
+playwright-report/
+test-results/
+
+# Streamlit (not used on Vercel — replaced by public/index.html)
+.streamlit/
+app.py
+
+# Local-only requirements
+requirements-local.txt
+requirements-vercel.txt
+
+# Tests (not needed in production Lambda)
+tests/
+
+# Demo scripts
+demo_navigation.py
+
+# Docs (not needed in Lambda)
+docs/
+
+# Assets (served separately or not needed)
+assets/
+
+# IDE & OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~

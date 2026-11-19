@@ -1,33 +1,32 @@
 {
   "version": 2,
-  "builds": [
+  "functions": {
+    "api/index.py": {
+      "runtime": "python3.12",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
     }
   ],
-  "routes": [
+  "headers": [
     {
-      "src": "/api/(.*)",
-      "dest": "api/index.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "public/$1"
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
+      ]
     }
   ],
   "env": {
     "ENVIRONMENT": "production",
     "LOG_LEVEL": "INFO",
+    "VERIFIND_SERVERLESS": "true",
     "MAX_SEARCH_RESULTS": "5",
     "REQUEST_TIMEOUT_SECONDS": "15"
   }
 }
-

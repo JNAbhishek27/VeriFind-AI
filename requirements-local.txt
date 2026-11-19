@@ -1,0 +1,17 @@
+# VeriFind AI — Local Development Dependencies
+# Use this when working locally: pip install -r requirements-local.txt
+#
+# Includes Playwright (browser automation) and Streamlit (local UI),
+# which are intentionally excluded from requirements.txt (used by Vercel).
+
+-r requirements.txt
+
+# Local UI
+streamlit>=1.35.0
+
+# Browser automation (local only — not available in Vercel serverless)
+playwright>=1.44.0
+
+# Dev / testing
+pytest>=8.2.0
+anyio>=4.0.0
